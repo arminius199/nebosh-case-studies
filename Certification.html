@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZW HSE Certificate</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .certificate-container {
+            width: 100%;
+            max-width: 900px;
+            border: 20px solid #1a356e;
+            background-color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            position: relative;
+            padding: 40px;
+        }
+        
+        /* Border decoration */
+        .certificate-container::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 2px solid #d4af37;
+            pointer-events: none;
+        }
+        
+        /* Corner ornaments */
+        .corner {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border: 3px solid #d4af37;
+        }
+        
+        .top-left {
+            top: 15px;
+            left: 15px;
+            border-right: none;
+            border-bottom: none;
+        }
+        
+        .top-right {
+            top: 15px;
+            right: 15px;
+            border-left: none;
+            border-bottom: none;
+        }
+        
+        .bottom-left {
+            bottom: 15px;
+            left: 15px;
+            border-right: none;
+            border-top: none;
+        }
+        
+        .bottom-right {
+            bottom: 15px;
+            right: 15px;
+            border-left: none;
+            border-top: none;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #1a356e;
+        }
+        
+        .logo-container {
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            display: inline-block;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            color: #1a356e;
+            padding: 15px 30px;
+            border: 3px solid #1a356e;
+            background: linear-gradient(to bottom, #f0f7ff, #ffffff);
+            margin-bottom: 15px;
+        }
+        
+        .logo-line1 {
+            font-size: 32px;
+            line-height: 1.1;
+        }
+        
+        .logo-line2 {
+            font-size: 28px;
+            line-height: 1.1;
+            margin: 5px 0;
+        }
+        
+        .logo-line3 {
+            font-size: 22px;
+            line-height: 1.1;
+            color: #2c5aa0;
+        }
+        
+        .certificate-title {
+            font-size: 36px;
+            color: #1a356e;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .subtitle {
+            font-size: 20px;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 5px;
+        }
+        
+        .certificate-body {
+            padding: 20px 40px;
+            text-align: center;
+        }
+        
+        .presented-to {
+            font-size: 24px;
+            margin: 30px 0 15px;
+            color: #333;
+        }
+        
+        .participant-name {
+            font-size: 40px;
+            font-weight: bold;
+            color: #1a356e;
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px dashed #d4af37;
+            background-color: #fafafa;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Georgia', serif;
+        }
+        
+        .achievement-text {
+            font-size: 20px;
+            line-height: 1.6;
+            margin: 25px 0;
+            color: #444;
+            text-align: justify;
+            padding: 0 20px;
+        }
+        
+        .course-details {
+            margin: 30px 0;
+            text-align: left;
+            padding: 20px;
+            background-color: #f5f9ff;
+            border-left: 4px solid #2c5aa0;
+        }
+        
+        .detail-row {
+            display: flex;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            min-width: 180px;
+            color: #1a356e;
+        }
+        
+        .detail-value {
+            color: #333;
+        }
+        
+        .signature-area {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 2px solid #1a356e;
+        }
+        
+        .signature-box {
+            width: 45%;
+            text-align: center;
+        }
+        
+        .signature-line {
+            border-top: 1px solid #333;
+            width: 80%;
+            margin: 60px auto 10px;
+        }
+        
+        .signature-name {
+            font-weight: bold;
+            font-size: 18px;
+            color: #1a356e;
+        }
+        
+        .signature-title {
+            font-size: 16px;
+            color: #666;
+        }
+        
+        .certificate-id {
+            text-align: right;
+            margin-top: 30px;
+            font-size: 16px;
+            color: #777;
+        }
+        
+        .date-issued {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 18px;
+            color: #333;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 16px;
+            color: #777;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="certificate-container">
+        <!-- Corner decorations -->
+        <div class="corner top-left"></div>
+        <div class="corner top-right"></div>
+        <div class="corner bottom-left"></div>
+        <div class="corner bottom-right"></div>
+        
+        <div class="header">
+            <div class="logo-container">
+                <div class="logo">
+                    <div class="logo-line1">ZW HSE</div>
+                    <div class="logo-line2">CONSTRUCTION</div>
+                    <div class="logo-line3">DEPARTMENT</div>
+                </div>
+            </div>
+            <h1 class="certificate-title">Certificate of Achievement</h1>
+            <div class="subtitle">This Certificate is Proudly Presented To</div>
+        </div>
+        
+        <div class="certificate-body">
+            <div class="presented-to">Awarded to</div>
+            <div class="participant-name" id="participantName">JOHN ALEXANDER SMITH</div>
+            
+            <div class="achievement-text">
+                For successfully completing the <strong>Advanced Health, Safety and Environment (HSE) in Construction</strong> training program, demonstrating outstanding commitment to safety standards, regulatory compliance, and best practices in the construction industry.
+            </div>
+            
+            <div class="course-details">
+                <div class="detail-row">
+                    <div class="detail-label">Course Title:</div>
+                    <div class="detail-value">Advanced HSE in Construction Management</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Duration:</div>
+                    <div class="detail-value">40 hours of intensive training</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Completion Date:</div>
+                    <div class="detail-value">October 26, 2023</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Certificate ID:</div>
+                    <div class="detail-value">ZW-HSE-2023-0895</div>
+                </div>
+            </div>
+            
+            <div class="date-issued">
+                Issued on this <strong>26th day of October 2023</strong>
+            </div>
+            
+            <div class="signature-area">
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <div class="signature-name">Michael Rodriguez</div>
+                    <div class="signature-title">Training Director</div>
+                    <div class="signature-title">ZW HSE Construction Department</div>
+                </div>
+                
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <div class="signature-name">Sarah Johnson</div>
+                    <div class="signature-title">Head of Certification</div>
+                    <div class="signature-title">ZW HSE Construction Department</div>
+                </div>
+            </div>
+            
+            <div class="certificate-id">
+                Certificate ID: ZW-HSE-2023-0895 | Verification URL: www.zwhse-verify.org/cert/0895
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This certificate acknowledges the participant's dedication to maintaining the highest standards of health, safety, and environmental protection in construction operations.</p>
+        </div>
+    </div>
+
+    <script>
+        // Function to update the participant name
+        function updateParticipantName() {
+            const name = prompt("Enter the participant's full name:", "JOHN ALEXANDER SMITH");
+            if (name && name.trim() !== "") {
+                document.getElementById('participantName').textContent = name.toUpperCase();
+                
+                // Also update the certificate ID to include initials
+                const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+                const newId = `ZW-HSE-2023-${initials}-0895`;
+                document.querySelector('.detail-value:nth-child(8)').textContent = newId;
+                document.querySelector('.certificate-id').innerHTML = 
+                    `Certificate ID: ${newId} | Verification URL: www.zwhse-verify.org/cert/${newId}`;
+            }
+        }
+        
+        // Click on the participant name to change it
+        document.getElementById('participantName').addEventListener('click', updateParticipantName);
+        
+        // Auto-focus on participant name for easy editing
+        window.onload = function() {
+            // Uncomment the line below to automatically prompt for name when page loads
+            // updateParticipantName();
+        };
+    </script>
+</body>
+</html>

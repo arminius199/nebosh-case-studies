@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEBOSH Case Studies Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --card-shadow: 0 8px 20px rgba(0,0,0,.12);
+            --transition: all .35s ease;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #f8f9fc, #e0e7ff);
+            color: #2d3436;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1450px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            padding: 28px 0;
+            border-radius: 0 0 18px 18px;
+            box-shadow: 0 8px 25px rgba(0,0,0,.18);
+            margin-bottom: 35px;
+        }
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .logo img {
+            height: 65px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,.3);
+        }
+        .header-text h1 {
+            font-size: 2.6rem;
+        }
+        .subtitle {
+            font-size: 1.15rem;
+            opacity: .95;
+        }
+
+        .search-container {
+            margin-bottom: 28px;
+            text-align: center;
+        }
+        .search-box {
+            max-width: 520px;
+            margin: auto;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 15px 55px 15px 22px;
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,.1);
+            font-size: 1rem;
+        }
+        .search-box i {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+            font-size: 1.3rem;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 22px;
+            margin-bottom: 35px;
+        }
+        .stat-card {
+            background: #fff;
+            padding: 28px;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            transition: var(--transition);
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-icon {
+            font-size: 2.2rem;
+            color: var(--secondary);
+            margin-bottom: 15px;
+        }
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        .stat-label {
+            font-size: 1rem;
+            color: #636e72;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .case-studies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+            gap: 28px;
+            margin-bottom: 40px;
+        }
+        .case-study-card {
+            background: #fff;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .case-study-card:hover {
+            transform: translateY(-12px) scale(1.03);
+            box-shadow: 0 15px 30px rgba(0,0,0,.15);
+        }
+        .case-study-header {
+            background: linear-gradient(135deg, var(--secondary), #2980b9);
+            color: #fff;
+            padding: 20px 24px;
+            position: relative;
+        }
+        .case-study-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .case-study-date {
+            font-size: .95rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            opacity: 0.9;
+        }
+        .case-study-content {
+            padding: 24px;
+        }
+        .case-study-summary {
+            color: #555;
+            margin-bottom: 15px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .resource-tag {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 25px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,.85);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .modal-content {
+            background: #fff;
+            margin: 40px auto;
+            width: 95%;
+            max-width: 1380px;
+            border-radius: 18px;
+            box-shadow: 0 12px 40px rgba(0,0,0,.3);
+            position: relative;
+        }
+        .close-button {
+            position: absolute;
+            top: 18px;
+            right: 28px;
+            font-size: 34px;
+            color: #fff;
+            background: rgba(231,76,60,.9);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001;
+            transition: var(--transition);
+        }
+        .close-button:hover {
+            background: rgba(231,76,60,1);
+            transform: scale(1.1);
+        }
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            padding: 28px;
+            border-radius: 18px 18px 0 0;
+            text-align: center;
+        }
+        .modal-body {
+            padding: 28px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+        }
+        
+        /* PDF Section */
+        .pdf-section {
+            height: 650px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .pdf-actions {
+            padding: 14px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .pdf-action-btn {
+            background: var(--secondary);
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+        .pdf-action-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        .pdf-action-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .pdf-preview {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            background: #f8f9fa;
+        }
+        .pdf-preview iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .pdf-loading, .pdf-error {
+            padding: 35px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+        }
+        .pdf-error {
+            color: var(--accent);
+        }
+        .pdf-error i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        /* Case Study Details */
+        .case-study-details {
+            overflow-y: auto;
+            max-height: 600px;
+            padding-right: 10px;
+        }
+        .detail-item {
+            margin-bottom: 24px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .detail-item p {
+            color: #555;
+            line-height: 1.6;
+            margin-top: 5px;
+        }
+        .detail-item a {
+            color: var(--secondary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            transition: var(--transition);
+            margin-top: 8px;
+        }
+        .detail-item a:hover {
+            background: #bbdefb;
+            transform: translateY(-2px);
+        }
+        
+        /* Media Gallery */
+        .media-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .media-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            height: 120px;
+            transition: var(--transition);
+        }
+        .media-item:hover {
+            transform: scale(1.05);
+        }
+        .media-item img, .media-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .media-type {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        /* Ticket Form */
+        #ticketForm {
+            max-width: 520px;
+            margin: 30px auto;
+            padding: 30px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+        }
+        #ticketForm input, #ticketForm textarea {
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        #ticketForm input:focus, #ticketForm textarea:focus {
+            border-color: var(--secondary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        #ticketForm button {
+            background: var(--secondary);
+            color: #fff;
+            padding: 16px;
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        #ticketForm button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        /* Admin Styles */
+        #adminContent input, #adminContent select, #adminContent textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+        #adminContent button {
+            background: var(--success);
+            color: #fff;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: var(--transition);
+            margin-top: 10px;
+        }
+        #adminContent button:hover {
+            background: #219653;
+            transform: translateY(-2px);
+        }
+        #logoutBtn {
+            background: var(--accent);
+            margin-left: 10px;
+        }
+        .admin-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+        .admin-section h3 {
+            margin-bottom: 20px;
+            color: var(--primary);
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--secondary);
+        }
+        
+        /* Floating Buttons */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            font-size: 3rem;
+            color: #25D366;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+        }
+        #adminBtn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            background: var(--secondary);
+            color: #fff;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+        }
+        #adminBtn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2980b9;
+        }
+
+        /* Loading States */
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .modal-body {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .pdf-section {
+                height: 500px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .case-studies-grid {
+                grid-template-columns: 1fr;
+            }
+            .header-text h1 {
+                font-size: 2rem;
+            }
+            .stat-value {
+                font-size: 2.5rem;
+            }
+            .modal-content {
+                width: 98%;
+                margin: 20px auto;
+            }
+            .pdf-actions {
+                flex-direction: column;
+            }
+            .pdf-action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 400px;
+        }
+        .notification.success {
+            background: var(--success);
+        }
+        .notification.error {
+            background: var(--accent);
+        }
+        .notification.warning {
+            background: var(--warning);
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Issue Badge */
+        .issue-badge {
+            background: var(--accent);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <div class="header-content">
+            <div class="logo"><img src="HSE Consrtuction.PNG" alt="Logo"></div>
+            <div class="header-text">
+                <h1>NEBOSH Case Studies</h1>
+                <p class="subtitle">Advanced Safety Training Dashboard</p>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="search-container">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search by title, date, or description...">
+            <i class="fas fa-search"></i>
+        </div>
+    </div>
+
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <i class="fas fa-folder-open stat-icon"></i>
+            <div class="stat-value" id="totalStudies">0</div>
+            <div class="stat-label">Total Studies</div>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-user-check stat-icon" style="color:var(--success);"></i>
+            <div class="stat-value" id="performedBy">0</div>
+            <div class="stat-label">Performed By</div>
+        </div>
+    </div>
+
+    <div class="case-studies-grid" id="caseStudiesContainer">
+        <!-- Case studies will be loaded here -->
+    </div>
+</div>
+
+<!-- Case Study Modal -->
+<div id="caseStudyModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" id="closeModal">×</span>
+        <div class="modal-header">
+            <h2 id="modalTitle">Case Study</h2>
+            <p id="modalDate"></p>
+        </div>
+        <div class="modal-body">
+            <div class="pdf-section">
+                <div class="pdf-actions">
+                    <button class="pdf-action-btn" id="viewLocalPdf">
+                        <i class="fas fa-eye"></i> View Local
+                    </button>
+                    <button class="pdf-action-btn" id="viewGooglePdf">
+                        <i class="fab fa-google"></i> Google Viewer
+                    </button>
+                    <button class="pdf-action-btn" id="downloadPdf">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+                <div class="pdf-preview">
+                    <div id="pdfLoading" class="pdf-loading">
+                        <i class="fas fa-spinner fa-spin fa-3x"></i>
+                        <p>Loading PDF...</p>
+                    </div>
+                    <div id="pdfError" class="pdf-error" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p id="pdfErrorMessage">Failed to load PDF. Please try another viewing option.</p>
+                    </div>
+                    <iframe id="pdfViewer" src="" frameborder="0" style="display: none;"></iframe>
+                </div>
+            </div>
+            <div class="case-study-details">
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-align-left"></i> Description</div>
+                    <p id="modalDescription"></p>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-tools"></i> Resources</div>
+                    <p id="modalResources"></p>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-external-link-alt"></i> External Link</div>
+                    <a href="#" id="externalLink" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> Open Link
+                    </a>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-images"></i> Media Gallery</div>
+                    <div id="modalGallery" class="media-gallery">
+                        <!-- Photos and videos will be added here -->
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-exclamation-circle"></i> Issues Reported</div>
+                    <div id="modalIssues">None reported</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Modal -->
+<div id="adminModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" id="closeAdminModal">×</span>
+        
+        <div id="adminLogin" style="display: block; padding: 30px;">
+            <h2 style="text-align: center; margin-bottom: 25px; color: var(--primary);">
+                <i class="fas fa-lock"></i> Admin Authentication
+            </h2>
+            <form id="loginForm">
+                <input type="email" id="adminEmail" placeholder="Email" required>
+                <input type="password" id="adminPassword" placeholder="Password" required>
+                <button type="submit" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+            <div style="text-align: center; margin-top: 20px; color: #666;">
+                <p><strong>Note:</strong> You must have a Supabase account with proper permissions.</p>
+                <p style="font-size: 0.9rem; margin-top: 10px;">
+                    Create admin user in Supabase → Authentication → Users
+                </p>
+            </div>
+        </div>
+        
+        <div id="adminContent" style="display: none; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid var(--secondary);">
+                <h2 style="color: var(--primary);">
+                    <i class="fas fa-cogs"></i> Admin Panel
+                </h2>
+                <button id="logoutBtn" style="background: var(--accent);">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+            
+            <div class="admin-section">
+                <h3><i class="fas fa-plus-circle"></i> Add/Edit Case Study</h3>
+                <form id="caseForm">
+                    <input type="hidden" id="caseId" name="id">
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Title *</label>
+                            <input type="text" id="caseTitle" name="title" placeholder="Case Study Title" required>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Start Date *</label>
+                            <input type="text" id="caseStartDate" name="start_date" placeholder="e.g., 1r, 2w, 3m" required>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Description *</label>
+                        <textarea id="caseDescription" name="description" placeholder="Detailed description..." rows="3" required></textarea>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Resources *</label>
+                        <textarea id="caseResources" name="resources" placeholder="Resources used (comma separated)" rows="2" required></textarea>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">External Link</label>
+                        <input type="text" id="caseExternalLink" name="external_link" placeholder="https://example.com">
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">
+                            <i class="fas fa-file-pdf"></i> PDF File *
+                        </label>
+                        <input type="file" id="casePdf" name="pdf" accept=".pdf" required>
+                        <small id="currentPdf" style="color: #666; display: block; margin-top: 5px;"></small>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">
+                                <i class="fas fa-images"></i> Photos
+                            </label>
+                            <input type="file" id="casePhotos" name="photos" accept="image/*" multiple>
+                            <small style="color: #666; display: block; margin-top: 5px;">
+                                Optional: Upload multiple photos
+                            </small>
+                            <div id="currentPhotos" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px;"></div>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">
+                                <i class="fas fa-video"></i> Videos
+                            </label>
+                            <input type="file" id="caseVideos" name="videos" accept="video/*" multiple>
+                            <small style="color: #666; display: block; margin-top: 5px;">
+                                Optional: Upload multiple videos
+                            </small>
+                            <div id="currentVideos" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px;"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">
+                            <i class="fas fa-exclamation-triangle"></i> Issues
+                        </label>
+                        <textarea id="caseIssues" name="issues" placeholder="Report any issues or notes..." rows="2"></textarea>
+                    </div>
+                    
+                    <button type="submit" id="submitCaseBtn" style="width: 100%;">
+                        <i class="fas fa-save"></i> Save Case Study
+                    </button>
+                    <button type="button" id="clearFormBtn" style="background: #95a5a6; width: 100%; margin-top: 10px;">
+                        <i class="fas fa-times"></i> Clear Form
+                    </button>
+                </form>
+            </div>
+            
+            <div class="admin-section">
+                <h3><i class="fas fa-list"></i> Existing Case Studies</h3>
+                <div id="caseList" style="max-height: 300px; overflow-y: auto; padding: 10px; background: white; border-radius: 8px; border: 1px solid #eee;">
+                    <!-- Case studies list will be loaded here -->
+                </div>
+            </div>
+            
+            <div class="admin-section">
+                <h3><i class="fas fa-ticket-alt"></i> Submitted Tickets</h3>
+                <div id="ticketsList" style="max-height: 300px; overflow-y: auto; padding: 10px; background: white; border-radius: 8px; border: 1px solid #eee;">
+                    <!-- Tickets will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- WhatsApp Float -->
+<a href="https://wa.me/09330273366" class="whatsapp-float" target="_blank">
+    <i class="fab fa-whatsapp"></i>
+</a>
+
+<!-- Admin Button -->
+<button id="adminBtn">
+    <i class="fas fa-cog"></i> Admin
+</button>
+
+<!-- Ticket Submission Section -->
+<div class="container">
+    <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: var(--card-shadow);">
+        <h2 style="text-align: center; margin-bottom: 25px; color: var(--primary);">
+            <i class="fas fa-ticket-alt"></i> Submit Support Ticket
+        </h2>
+        <form id="ticketForm">
+            <input type="email" name="email" placeholder="Your Email" required>
+            <input type="text" name="subject" placeholder="Subject" required>
+            <textarea name="message" placeholder="Describe your issue or request..." rows="5" required></textarea>
+            <button type="submit">
+                <i class="fas fa-paper-plane"></i> Submit Ticket
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Supabase Configuration
+    const supabaseUrl = 'https://hhvjvabvknzbmcssndyp.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhodmp2YWJ2a256Ym1jc3NuZHlwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Njc2NDk1OCwiZXhwIjoyMDgyMzQwOTU4fQ._lPBtGSRPDLnh2VIgJ266QMKyJYsQuk9DZf5RohskZA';
+    
+    // Initialize Supabase client
+    const { createClient } = supabase;
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+    
+    // State variables
+    let currentStudy = null;
+    let allStudies = [];
+    let currentUser = null;
+    
+    // DOM Elements
+    const container = document.getElementById('caseStudiesContainer');
+    const caseStudyModal = document.getElementById('caseStudyModal');
+    const adminModal = document.getElementById('adminModal');
+    const searchInput = document.getElementById('searchInput');
+    const pdfViewer = document.getElementById('pdfViewer');
+    const pdfLoading = document.getElementById('pdfLoading');
+    const pdfError = document.getElementById('pdfError');
+    const pdfErrorMessage = document.getElementById('pdfErrorMessage');
+    
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', async () => {
+        console.log('Initializing application...');
+        
+        // Check for existing session
+        await checkAuth();
+        
+        // Fetch case studies
+        await fetchCases();
+        
+        // Setup event listeners
+        setupEventListeners();
+        
+        console.log('Application initialized');
+    });
+    
+    // Check authentication status
+    async function checkAuth() {
+        try {
+            const { data, error } = await supabaseClient.auth.getSession();
+            if (error) throw error;
+            
+            if (data.session) {
+                currentUser = data.session.user;
+                console.log('User is logged in:', currentUser.email);
+            }
+        } catch (error) {
+            console.error('Error checking auth:', error);
+        }
+    }
+    
+    // Setup event listeners
+    function setupEventListeners() {
+        // Modal close buttons
+        document.getElementById('closeModal').onclick = () => closeModal(caseStudyModal);
+        document.getElementById('closeAdminModal').onclick = () => closeModal(adminModal);
+        
+        // Close modals when clicking outside
+        window.onclick = (e) => {
+            if (e.target === caseStudyModal) closeModal(caseStudyModal);
+            if (e.target === adminModal) closeModal(adminModal);
+        };
+        
+        // Admin button
+        document.getElementById('adminBtn').onclick = async () => {
+            adminModal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            
+            // Check if user is already logged in
+            const { data } = await supabaseClient.auth.getSession();
+            if (data.session) {
+                // User is logged in, show admin content
+                currentUser = data.session.user;
+                document.getElementById('adminLogin').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'block';
+                await loadAdminContent();
+            } else {
+                // User is not logged in, show login form
+                document.getElementById('adminLogin').style.display = 'block';
+                document.getElementById('adminContent').style.display = 'none';
+            }
+        };
+        
+        // Admin login form
+        document.getElementById('loginForm').onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            
+            // Show loading state
+            const loginBtn = document.getElementById('loginBtn');
+            const originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+            loginBtn.disabled = true;
+            
+            try {
+                console.log('Attempting login...');
+                
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    console.error('Login error:', error);
+                    showNotification('Login failed: ' + error.message, 'error');
+                    throw error;
+                }
+                
+                currentUser = data.user;
+                console.log('Login successful:', currentUser.email);
+                
+                // Show admin content
+                document.getElementById('adminLogin').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'block';
+                await loadAdminContent();
+                
+                showNotification('Login successful!', 'success');
+                
+            } catch (error) {
+                console.error('Login failed:', error);
+            } finally {
+                // Restore button state
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+            }
+        };
+        
+        // Logout button
+        document.getElementById('logoutBtn').onclick = async () => {
+            try {
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) throw error;
+                
+                currentUser = null;
+                document.getElementById('adminLogin').style.display = 'block';
+                document.getElementById('adminContent').style.display = 'none';
+                document.getElementById('loginForm').reset();
+                
+                showNotification('Logged out successfully', 'success');
+                
+                // Close admin modal
+                setTimeout(() => {
+                    adminModal.style.display = 'none';
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Logout error:', error);
+                showNotification('Logout failed', 'error');
+            }
+        };
+        
+        // Search functionality
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            if (searchTerm) {
+                const filtered = allStudies.filter(study => {
+                    const title = study.title ? study.title.toLowerCase() : '';
+                    const description = study.description ? study.description.toLowerCase() : '';
+                    const resources = study.resources ? study.resources.toLowerCase() : '';
+                    const startDate = study.start_date ? study.start_date.toLowerCase() : '';
+                    
+                    return title.includes(searchTerm) ||
+                           description.includes(searchTerm) ||
+                           resources.includes(searchTerm) ||
+                           startDate.includes(searchTerm);
+                });
+                renderCaseStudies(filtered);
+            } else {
+                renderCaseStudies(allStudies);
+            }
+        });
+        
+        // Clear form button
+        document.getElementById('clearFormBtn').onclick = () => {
+            resetCaseForm();
+        };
+        
+        // PDF action buttons
+        document.getElementById('viewLocalPdf').onclick = () => {
+            if (currentStudy && isValidUrl(currentStudy.pdf_url)) {
+                console.log('Viewing PDF locally:', currentStudy.pdf_url);
+                pdfViewer.src = currentStudy.pdf_url;
+                pdfViewer.style.display = 'block';
+                pdfLoading.style.display = 'none';
+                pdfError.style.display = 'none';
+            } else {
+                showPdfError('No valid PDF URL found for this case study.');
+                disablePdfButtons();
+            }
+        };
+        
+        document.getElementById('viewGooglePdf').onclick = () => {
+            if (currentStudy && isValidUrl(currentStudy.pdf_url)) {
+                const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(currentStudy.pdf_url)}&embedded=true`;
+                console.log('Opening Google Viewer:', googleViewerUrl);
+                pdfViewer.src = googleViewerUrl;
+                pdfViewer.style.display = 'block';
+                pdfLoading.style.display = 'none';
+                pdfError.style.display = 'none';
+            } else {
+                showPdfError('No valid PDF URL found for this case study.');
+                disablePdfButtons();
+            }
+        };
+        
+        document.getElementById('downloadPdf').onclick = () => {
+            if (currentStudy && isValidUrl(currentStudy.pdf_url)) {
+                const link = document.createElement('a');
+                link.href = currentStudy.pdf_url;
+                link.download = `${(currentStudy.title || 'case-study').replace(/\s+/g, '_')}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                showNotification('No PDF available for download.', 'error');
+            }
+        };
+        
+        // PDF viewer load/error events
+        pdfViewer.onload = () => {
+            console.log('PDF loaded successfully');
+            pdfLoading.style.display = 'none';
+            pdfError.style.display = 'none';
+            pdfViewer.style.display = 'block';
+        };
+        
+        pdfViewer.onerror = () => {
+            console.error('Failed to load PDF');
+            showPdfError('Failed to load PDF. The file may be corrupted or inaccessible.');
+        };
+    }
+    
+    // Fetch all case studies
+    async function fetchCases() {
+        try {
+            console.log('Fetching case studies from Supabase...');
+            
+            const { data, error } = await supabaseClient
+                .from('case_studies')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) {
+                console.error('Supabase error:', error);
+                showNotification('Error loading case studies', 'error');
+                return;
+            }
+            
+            console.log('Fetched', data?.length || 0, 'case studies');
+            
+            allStudies = data || [];
+            renderCaseStudies(allStudies);
+            updateStatistics(allStudies);
+            
+        } catch (error) {
+            console.error('Error fetching cases:', error);
+            showNotification('Network error. Please check your connection.', 'error');
+        }
+    }
+    
+    // Render case studies to the grid
+    function renderCaseStudies(studies) {
+        container.innerHTML = '';
+        
+        if (!studies || studies.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; grid-column: 1/-1; padding: 40px; color: #666;">
+                    <i class="fas fa-search fa-3x" style="margin-bottom: 20px; opacity: 0.5;"></i>
+                    <h3>No case studies found</h3>
+                    <p>Try a different search term or add new case studies.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        studies.forEach(study => {
+            const card = document.createElement('div');
+            card.className = 'case-study-card';
+            
+            const hasIssues = study.issues && study.issues.trim() !== '';
+            const hasPdf = study.pdf_url && isValidUrl(study.pdf_url);
+            const hasMedia = (study.photo_url && isValidUrl(study.photo_url)) || 
+                           (study.video_url && isValidUrl(study.video_url)) ||
+                           (study.photo_urls && study.photo_urls.length > 0) ||
+                           (study.video_urls && study.video_urls.length > 0);
+            
+            card.innerHTML = `
+                <div class="case-study-header">
+                    <div class="case-study-title">${study.title || 'Untitled'}</div>
+                    <div class="case-study-date">
+                        <i class="fas fa-calendar-alt"></i> Start Date: ${study.start_date || 'N/A'}
+                    </div>
+                    ${hasIssues ? '<div style="position: absolute; top: 10px; right: 10px; background: rgba(231, 76, 60, 0.9); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem;"><i class="fas fa-exclamation-circle"></i> Issues</div>' : ''}
+                    ${hasMedia ? '<div style="position: absolute; top: 10px; left: 10px; background: rgba(52, 152, 219, 0.9); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem;"><i class="fas fa-images"></i> Media</div>' : ''}
+                    ${!hasPdf ? '<div style="position: absolute; bottom: 10px; right: 10px; background: rgba(243, 156, 18, 0.9); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem;"><i class="fas fa-exclamation-triangle"></i> No PDF</div>' : ''}
+                </div>
+                <div class="case-study-content">
+                    <p class="case-study-summary">${(study.description || '').substring(0, 150)}${(study.description || '').length > 150 ? '...' : ''}</p>
+                    <div class="resource-tag" style="${!hasPdf ? 'background: linear-gradient(45deg, #f39c12, #e67e22);' : ''}">
+                        <i class="fas fa-file-pdf"></i> ${hasPdf ? 'PDF Available' : 'No PDF'}
+                    </div>
+                </div>
+            `;
+            
+            card.onclick = () => openCaseStudyModal(study);
+            container.appendChild(card);
+        });
+    }
+    
+    // Update statistics
+    function updateStatistics(studies) {
+        const totalStudies = studies.length;
+        
+        // Count studies with valid PDFs as "Performed By"
+        const performedBy = studies.filter(s => 
+            s.pdf_url && isValidUrl(s.pdf_url)
+        ).length;
+        
+        // Animate counting
+        animateCounter('totalStudies', totalStudies);
+        animateCounter('performedBy', performedBy);
+    }
+    
+    // Animate counter
+    function animateCounter(elementId, target) {
+        const element = document.getElementById(elementId);
+        const current = parseInt(element.textContent) || 0;
+        const increment = target > current ? 1 : -1;
+        let currentValue = current;
+        
+        if (target === current) return;
+        
+        const timer = setInterval(() => {
+            currentValue += increment;
+            element.textContent = currentValue;
+            
+            if ((increment > 0 && currentValue >= target) || 
+                (increment < 0 && currentValue <= target)) {
+                element.textContent = target;
+                clearInterval(timer);
+            }
+        }, 20);
+    }
+    
+    // Open case study modal
+    async function openCaseStudyModal(study) {
+        currentStudy = study;
+        
+        // Update modal content
+        document.getElementById('modalTitle').textContent = study.title || 'Case Study';
+        document.getElementById('modalDate').textContent = `Start Date: ${study.start_date || 'Not specified'}`;
+        document.getElementById('modalDescription').textContent = study.description || 'No description available.';
+        document.getElementById('modalResources').textContent = study.resources || 'No resources specified.';
+        
+        // External link
+        const externalLink = document.getElementById('externalLink');
+        if (study.external_link && isValidUrl(study.external_link)) {
+            externalLink.href = study.external_link;
+            externalLink.style.display = 'inline-flex';
+        } else {
+            externalLink.style.display = 'none';
+        }
+        
+        // Issues
+        const issuesElement = document.getElementById('modalIssues');
+        if (study.issues && study.issues.trim() !== '') {
+            issuesElement.innerHTML = `
+                <div class="issue-badge">
+                    <i class="fas fa-exclamation-circle"></i> ${study.issues}
+                </div>
+            `;
+        } else {
+            issuesElement.innerHTML = '<span style="color: var(--success);"><i class="fas fa-check-circle"></i> No issues reported</span>';
+        }
+        
+        // Media gallery
+        const gallery = document.getElementById('modalGallery');
+        gallery.innerHTML = '';
+        
+        // Add single photo (backward compatibility)
+        if (study.photo_url && isValidUrl(study.photo_url)) {
+            addMediaToGallery(study.photo_url, 'photo', study.title);
+        }
+        
+        // Add single video (backward compatibility)
+        if (study.video_url && isValidUrl(study.video_url)) {
+            addMediaToGallery(study.video_url, 'video', study.title);
+        }
+        
+        // Add photo arrays
+        if (study.photo_urls && Array.isArray(study.photo_urls)) {
+            study.photo_urls.forEach((url, index) => {
+                if (isValidUrl(url)) {
+                    addMediaToGallery(url, 'photo', `${study.title} - Photo ${index + 1}`);
+                }
+            });
+        }
+        
+        // Add video arrays
+        if (study.video_urls && Array.isArray(study.video_urls)) {
+            study.video_urls.forEach((url, index) => {
+                if (isValidUrl(url)) {
+                    addMediaToGallery(url, 'video', `${study.title} - Video ${index + 1}`);
+                }
+            });
+        }
+        
+        // Setup PDF viewer
+        if (study.pdf_url && isValidUrl(study.pdf_url)) {
+            pdfViewer.src = '';
+            pdfLoading.style.display = 'flex';
+            pdfError.style.display = 'none';
+            pdfViewer.style.display = 'none';
+            
+            // Enable PDF buttons
+            enablePdfButtons();
+            
+            // Show the PDF loading initially
+            setTimeout(() => {
+                if (currentStudy === study) { // Make sure we're still viewing the same study
+                    pdfViewer.src = study.pdf_url;
+                }
+            }, 100);
+        } else {
+            showPdfError('No valid PDF URL found for this case study.');
+            disablePdfButtons();
+        }
+        
+        // Show modal
+        caseStudyModal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+    
+    // Add media to gallery
+    function addMediaToGallery(url, type, title) {
+        const gallery = document.getElementById('modalGallery');
+        const mediaItem = document.createElement('div');
+        mediaItem.className = 'media-item';
+        
+        if (type === 'photo') {
+            mediaItem.innerHTML = `
+                <img src="${url}" alt="${title}" style="width: 100%; height: 100%; object-fit: cover;">
+                <div class="media-type">Photo</div>
+            `;
+            mediaItem.onclick = () => {
+                // Open image in new tab
+                window.open(url, '_blank');
+            };
+        } else if (type === 'video') {
+            mediaItem.innerHTML = `
+                <video controls style="width: 100%; height: 100%; object-fit: cover;">
+                    <source src="${url}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="media-type">Video</div>
+            `;
+        }
+        
+        gallery.appendChild(mediaItem);
+    }
+    
+    // Show PDF error
+    function showPdfError(message) {
+        pdfLoading.style.display = 'none';
+        pdfViewer.style.display = 'none';
+        pdfError.style.display = 'flex';
+        pdfErrorMessage.textContent = message;
+    }
+    
+    // Disable PDF buttons
+    function disablePdfButtons() {
+        document.getElementById('viewLocalPdf').disabled = true;
+        document.getElementById('viewGooglePdf').disabled = true;
+        document.getElementById('downloadPdf').disabled = true;
+    }
+    
+    // Enable PDF buttons
+    function enablePdfButtons() {
+        document.getElementById('viewLocalPdf').disabled = false;
+        document.getElementById('viewGooglePdf').disabled = false;
+        document.getElementById('downloadPdf').disabled = false;
+    }
+    
+    // Validate URL
+    function isValidUrl(string) {
+        if (!string || typeof string !== 'string') return false;
+        try {
+            const url = new URL(string);
+            return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch (_) {
+            return false;
+        }
+    }
+    
+    // Load admin content
+    async function loadAdminContent() {
+        try {
+            // Load case studies for admin
+            const { data: cases, error: casesError } = await supabaseClient
+                .from('case_studies')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (casesError) throw casesError;
+            
+            // Render case list for admin
+            const caseList = document.getElementById('caseList');
+            caseList.innerHTML = '';
+            
+            if (cases && cases.length > 0) {
+                cases.forEach(caseStudy => {
+                    const caseItem = document.createElement('div');
+                    caseItem.style.cssText = 'margin: 10px 0; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid var(--secondary); box-shadow: 0 2px 5px rgba(0,0,0,0.1);';
+                    
+                    const hasPdf = caseStudy.pdf_url && isValidUrl(caseStudy.pdf_url);
+                    
+                    caseItem.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="flex: 1;">
+                                <strong>${caseStudy.title || 'Untitled'}</strong>
+                                <div style="font-size: 0.9rem; color: #666;">
+                                    <i class="fas fa-calendar"></i> Date: ${caseStudy.start_date || 'N/A'}
+                                </div>
+                                <div style="font-size: 0.85rem; margin-top: 5px;">
+                                    <span style="color: ${hasPdf ? 'var(--success)' : 'var(--accent)'};">
+                                        <i class="fas fa-file-pdf"></i> ${hasPdf ? 'Has PDF' : 'Missing PDF'}
+                                    </span>
+                                    ${caseStudy.issues ? `<span style="color: var(--accent); margin-left: 10px;">
+                                        <i class="fas fa-exclamation-circle"></i> ${caseStudy.issues}
+                                    </span>` : ''}
+                                </div>
+                            </div>
+                            <div>
+                                <button onclick="editCase(${caseStudy.id})" style="background: var(--secondary); color: white; border: none; padding: 8px 15px; border-radius: 5px; margin-right: 8px; cursor: pointer;">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button onclick="deleteCase(${caseStudy.id})" style="background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    caseList.appendChild(caseItem);
+                });
+            } else {
+                caseList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No case studies found. Add your first case study above.</p>';
+            }
+            
+            // Load tickets
+            const { data: tickets, error: ticketsError } = await supabaseClient
+                .from('tickets')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (ticketsError) throw ticketsError;
+            
+            const ticketsList = document.getElementById('ticketsList');
+            ticketsList.innerHTML = '';
+            
+            if (tickets && tickets.length > 0) {
+                tickets.forEach(ticket => {
+                    const ticketItem = document.createElement('div');
+                    ticketItem.style.cssText = 'margin: 10px 0; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #f39c12; box-shadow: 0 2px 5px rgba(0,0,0,0.1);';
+                    ticketItem.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+                            <div style="flex: 1;">
+                                <strong>${ticket.subject || 'No Subject'}</strong>
+                                <div style="font-size: 0.9rem; color: var(--secondary); margin-top: 5px;">
+                                    <i class="fas fa-envelope"></i> From: ${ticket.email || 'No email'}
+                                </div>
+                                <div style="margin-top: 10px; color: #555; font-size: 0.95rem;">
+                                    ${ticket.message || 'No message'}
+                                </div>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #999; white-space: nowrap; margin-top: 10px;">
+                                <i class="fas fa-clock"></i> ${new Date(ticket.created_at).toLocaleDateString()}
+                            </div>
+                        </div>
+                    `;
+                    ticketsList.appendChild(ticketItem);
+                });
+            } else {
+                ticketsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No tickets submitted yet.</p>';
+            }
+            
+        } catch (error) {
+            console.error('Error loading admin content:', error);
+            showNotification('Error loading admin content', 'error');
+        }
+    }
+    
+    // Edit case study (for admin)
+    window.editCase = async (id) => {
+        try {
+            const { data, error } = await supabaseClient
+                .from('case_studies')
+                .select('*')
+                .eq('id', id)
+                .single();
+            
+            if (error) throw error;
+            
+            if (data) {
+                // Fill the form with existing data
+                document.getElementById('caseId').value = data.id;
+                document.getElementById('caseTitle').value = data.title || '';
+                document.getElementById('caseStartDate').value = data.start_date || '';
+                document.getElementById('caseDescription').value = data.description || '';
+                document.getElementById('caseResources').value = data.resources || '';
+                document.getElementById('caseExternalLink').value = data.external_link || '';
+                document.getElementById('caseIssues').value = data.issues || '';
+                
+                // Show current PDF
+                const currentPdf = document.getElementById('currentPdf');
+                if (data.pdf_url && isValidUrl(data.pdf_url)) {
+                    currentPdf.innerHTML = `
+                        <strong>Current PDF:</strong> 
+                        <a href="${data.pdf_url}" target="_blank" style="color: var(--secondary); margin-left: 5px;">
+                            <i class="fas fa-external-link-alt"></i> View PDF
+                        </a>
+                    `;
+                } else {
+                    currentPdf.innerHTML = '<span style="color: var(--accent);"><i class="fas fa-exclamation-triangle"></i> No PDF uploaded</span>';
+                }
+                
+                // Show current photos
+                const currentPhotos = document.getElementById('currentPhotos');
+                currentPhotos.innerHTML = '';
+                
+                const photos = [];
+                if (data.photo_url && isValidUrl(data.photo_url)) photos.push(data.photo_url);
+                if (data.photo_urls && Array.isArray(data.photo_urls)) {
+                    data.photo_urls.forEach(url => {
+                        if (isValidUrl(url)) photos.push(url);
+                    });
+                }
+                
+                if (photos.length > 0) {
+                    currentPhotos.innerHTML = '<strong>Current Photos:</strong><br>';
+                    photos.forEach((url, index) => {
+                        currentPhotos.innerHTML += `
+                            <div style="display: inline-block; margin: 5px; position: relative;">
+                                <img src="${url}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 5px; border: 2px solid #ddd;">
+                                <div style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.7); color: white; font-size: 0.7rem; padding: 1px 3px; border-radius: 2px;">${index + 1}</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                // Show current videos
+                const currentVideos = document.getElementById('currentVideos');
+                currentVideos.innerHTML = '';
+                
+                const videos = [];
+                if (data.video_url && isValidUrl(data.video_url)) videos.push(data.video_url);
+                if (data.video_urls && Array.isArray(data.video_urls)) {
+                    data.video_urls.forEach(url => {
+                        if (isValidUrl(url)) videos.push(url);
+                    });
+                }
+                
+                if (videos.length > 0) {
+                    currentVideos.innerHTML = '<strong>Current Videos:</strong><br>';
+                    videos.forEach((url, index) => {
+                        currentVideos.innerHTML += `
+                            <div style="display: inline-block; margin: 5px; position: relative;">
+                                <div style="width: 60px; height: 60px; background: #333; border-radius: 5px; display: flex; align-items: center; justify-content: center; border: 2px solid #ddd;">
+                                    <i class="fas fa-video" style="color: white; font-size: 1.5rem;"></i>
+                                </div>
+                                <div style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.7); color: white; font-size: 0.7rem; padding: 1px 3px; border-radius: 2px;">${index + 1}</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                // Update button text
+                const submitBtn = document.getElementById('submitCaseBtn');
+                submitBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Update Case Study';
+                submitBtn.style.background = 'var(--warning)';
+                
+                // Scroll to form
+                document.querySelector('#caseForm').scrollIntoView({ behavior: 'smooth' });
+                
+            }
+        } catch (error) {
+            console.error('Error loading case for edit:', error);
+            showNotification('Error loading case study for editing', 'error');
+        }
+    };
+    
+    // Delete case study
+    window.deleteCase = async (id) => {
+        if (!confirm('Are you sure you want to delete this case study? This action cannot be undone.')) {
+            return;
+        }
+        
+        try {
+            const { error } = await supabaseClient
+                .from('case_studies')
+                .delete()
+                .eq('id', id);
+            
+            if (error) throw error;
+            
+            showNotification('Case study deleted successfully!', 'success');
+            await loadAdminContent();
+            await fetchCases();
+            
+        } catch (error) {
+            console.error('Error deleting case:', error);
+            showNotification('Error deleting case study', 'error');
+        }
+    };
+    
+    // Case form submission (admin)
+    document.getElementById('caseForm').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        if (!currentUser) {
+            showNotification('You must be logged in to perform this action', 'error');
+            return;
+        }
+        
+        const formData = new FormData(e.target);
+        const caseId = formData.get('id');
+        const isUpdate = !!caseId;
+        
+        // Show loading state
+        const submitBtn = document.getElementById('submitCaseBtn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        submitBtn.disabled = true;
+        
+        try {
+            // Prepare case study data
+            const caseData = {
+                title: formData.get('title').trim(),
+                start_date: formData.get('start_date').trim(),
+                description: formData.get('description').trim(),
+                resources: formData.get('resources').trim(),
+                external_link: formData.get('external_link').trim() || null,
+                issues: formData.get('issues').trim() || null,
+                updated_at: new Date().toISOString()
+            };
+            
+            // Handle PDF upload
+            const pdfFile = document.getElementById('casePdf').files[0];
+            if (pdfFile) {
+                console.log('Uploading PDF...');
+                
+                // Generate unique filename
+                const fileExt = pdfFile.name.split('.').pop();
+                const fileName = `case_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                
+                // Upload to Supabase Storage
+                const { error: uploadError } = await supabaseClient.storage
+                    .from('pdfs')
+                    .upload(fileName, pdfFile);
+                
+                if (uploadError) {
+                    console.error('PDF upload error:', uploadError);
+                    throw new Error('Failed to upload PDF: ' + uploadError.message);
+                }
+                
+                // Get public URL
+                const { data: urlData } = supabaseClient.storage
+                    .from('pdfs')
+                    .getPublicUrl(fileName);
+                
+                caseData.pdf_url = urlData.publicUrl;
+                console.log('PDF uploaded successfully:', urlData.publicUrl);
+            }
+            
+            // Save to database
+            let result;
+            if (isUpdate) {
+                result = await supabaseClient
+                    .from('case_studies')
+                    .update(caseData)
+                    .eq('id', caseId);
+            } else {
+                caseData.created_at = new Date().toISOString();
+                result = await supabaseClient
+                    .from('case_studies')
+                    .insert([caseData]);
+            }
+            
+            if (result.error) {
+                console.error('Database error:', result.error);
+                throw result.error;
+            }
+            
+            showNotification(`Case study ${isUpdate ? 'updated' : 'added'} successfully!`, 'success');
+            
+            // Reset form
+            resetCaseForm();
+            
+            // Refresh data
+            await loadAdminContent();
+            await fetchCases();
+            
+        } catch (error) {
+            console.error('Error saving case study:', error);
+            showNotification('Error saving case study: ' + error.message, 'error');
+        } finally {
+            // Restore button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            if (isUpdate) {
+                submitBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Update Case Study';
+                submitBtn.style.background = 'var(--warning)';
+            } else {
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Case Study';
+                submitBtn.style.background = 'var(--success)';
+            }
+        }
+    };
+    
+    // Reset case form
+    function resetCaseForm() {
+        document.getElementById('caseForm').reset();
+        document.getElementById('caseId').value = '';
+        document.getElementById('currentPdf').textContent = '';
+        document.getElementById('currentPhotos').innerHTML = '';
+        document.getElementById('currentVideos').innerHTML = '';
+        document.getElementById('submitCaseBtn').innerHTML = '<i class="fas fa-save"></i> Save Case Study';
+        document.getElementById('submitCaseBtn').style.background = 'var(--success)';
+    }
+    
+    // Ticket form submission
+    document.getElementById('ticketForm').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const ticketData = {
+            email: formData.get('email').trim(),
+            subject: formData.get('subject').trim(),
+            message: formData.get('message').trim(),
+            created_at: new Date().toISOString()
+        };
+        
+        // Disable submit button
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        submitBtn.disabled = true;
+        
+        try {
+            const { error } = await supabaseClient
+                .from('tickets')
+                .insert([ticketData]);
+            
+            if (error) throw error;
+            
+            showNotification('Ticket submitted successfully! We will get back to you soon.', 'success');
+            e.target.reset();
+            
+            // Refresh tickets in admin panel if open
+            if (document.getElementById('adminContent').style.display === 'block') {
+                await loadAdminContent();
+            }
+            
+        } catch (error) {
+            console.error('Error submitting ticket:', error);
+            showNotification('Error submitting ticket', 'error');
+        } finally {
+            // Restore button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    };
+    
+    // Close modal function
+    function closeModal(modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        
+        // Reset PDF viewer
+        if (modal === caseStudyModal) {
+            pdfViewer.src = '';
+            pdfLoading.style.display = 'flex';
+            pdfError.style.display = 'none';
+            enablePdfButtons();
+        }
+    }
+    
+    // Show notification
+    function showNotification(message, type = 'info') {
+        // Remove existing notifications
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(notification => notification.remove());
+        
+        // Create new notification
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }
+        }, 5000);
+    }
+</script>
+</body>
+</html>
